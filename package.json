@@ -11,6 +11,7 @@
   },
   "bugs": "https://github.com/kitematic/kitematic/issues",
   "scripts": {
+    "build:darwin": "version=$(cat package.json | grep version | head -n 1 | cut -f 4 -d '\"') && electron-packager ./build \"Kitematic-rapid\" --platform=darwin --arch=all --version=0.33.6 --app-version=$version --overwrite --app-bundle-id=Kitematic-rapid",
     "start": "grunt",
     "test": "jest -c jest-unit.json",
     "integration": "jest -c jest-integration.json",
