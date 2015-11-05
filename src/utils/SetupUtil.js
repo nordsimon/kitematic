@@ -31,6 +31,13 @@ export default {
     _timers = [];
   },
 
+  setEnvironment (env) {
+    machine.setEnvironment(env)
+    router.get().transitionTo('loading');
+
+    _retryPromise.resolve();
+  },
+
   retry (removeVM) {
     metrics.track('Retried Setup', {
       removeVM
@@ -61,6 +68,17 @@ export default {
         // Make sure virtulBox and docker-machine are installed
         let virtualBoxInstalled = virtualBox.installed();
         let machineInstalled = machine.installed();
+
+        let environment = machine.name()
+
+        if (!machine.name()) {
+          router.get().transitionTo('setEnvironment');
+
+          this.clearTimers();
+          await this.pause();
+          continue;
+        }
+
         if (!virtualBoxInstalled || !machineInstalled) {
           router.get().transitionTo('setup');
           if (!virtualBoxInstalled) {
@@ -82,7 +100,9 @@ export default {
           machineVersion
         });
 
-        let exists = await virtualBox.vmExists(machine.name()) && fs.existsSync(path.join(util.home(), '.docker', 'machine', 'machines', machine.name()));
+        let machines = await machine.ls()
+
+        let exists = machines[machine.name()] && fs.existsSync(path.join(util.home(), '.docker', 'machine', 'machines', machine.name()));
         if (!exists) {
           router.get().transitionTo('setup');
           setupServerActions.started({started: true});
@@ -92,7 +112,9 @@ export default {
           } catch (err) {}
           await machine.create();
         } else {
-          let state = await machine.status();
+          // TODO: MOVE away somewhere else
+          let state = (machines[machine.name()].driver === "none") ? "Running" : await machine.status()
+
           if (state !== 'Running') {
             if (state === 'Saved') {
               router.get().transitionTo('setup');
@@ -110,6 +132,7 @@ export default {
         while (!ip && tries > 0) {
           try {
             console.log('Trying to fetch machine IP, tries left: ' + tries);
+
             ip = await machine.ip();
             tries -= 1;
             await Promise.delay(1000);

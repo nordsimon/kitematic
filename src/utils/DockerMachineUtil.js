@@ -4,6 +4,8 @@ import Promise from 'bluebird';
 import fs from 'fs';
 import util from './Util';
 
+let environment = undefined
+
 var DockerMachine = {
   command: function () {
     if (util.isWindows()) {
@@ -12,8 +14,11 @@ var DockerMachine = {
       return '/usr/local/bin/docker-machine';
     }
   },
+  setEnvironment: function(env) {
+    environment = env 
+  },
   name: function () {
-    return 'default';
+    return environment;
   },
   installed: function () {
     if (util.isWindows() && !process.env.DOCKER_TOOLBOX_INSTALL_PATH) {
@@ -33,6 +38,40 @@ var DockerMachine = {
         return Promise.resolve(null);
       }
     }).catch(() => {
+      return Promise.resolve(null);
+    });
+  },
+  ls: function () {
+    return util.exec([this.command(), 'ls']).then(stdout => {
+      try {
+        stdout = stdout.split('\n')
+        let machines = {}
+        let header = stdout.shift()
+        let headerColumns = header.match(/([A-Z])\w+/g)
+
+        headerColumns = headerColumns.map(function(column,i) {
+          return {
+            from: header.indexOf(column),
+            to: header.indexOf(headerColumns[i + 1]),
+            name: column.toLowerCase()
+          }
+        })
+
+        stdout.forEach(function(machine) {
+          var m = {}
+          headerColumns.forEach(function(column) {
+            var to = (column.to === -1) ? column.from + 100 : column.to
+            if(column.name) m[column.name] = machine.substring(column.from, to).trim()
+          })
+
+          machines[m.name] = m
+        })
+
+        return Promise.resolve(machines)
+      } catch (err) {
+        return Promise.resolve(null);
+      }
+    }).catch((err) => {
       return Promise.resolve(null);
     });
   },

@@ -142,7 +142,7 @@ export default {
   fetchAllContainers () {
     this.client.listContainers({all: true}, (err, containers) => {
       if (err) {
-        return;
+        return console.error(err);
       }
       async.map(containers, (container, callback) => {
         this.client.getContainer(container.Id).inspect((error, container) => {

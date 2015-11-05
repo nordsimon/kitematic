@@ -16,6 +16,7 @@ import Preferences from './components/Preferences.react';
 import About from './components/About.react';
 import Loading from './components/Loading.react';
 import NewContainerSearch from './components/NewContainerSearch.react';
+import SetEnvironment from './components/SetEnvironment.react';
 import Router from 'react-router';
 
 var Route = Router.Route;
@@ -53,6 +54,7 @@ var routes = (
     </Route>
     <DefaultRoute name="loading" handler={Loading}/>
     <Route name="setup" handler={Setup}/>
+    <Route name="setEnvironment" handler={SetEnvironment}/>
   </Route>
 );
 

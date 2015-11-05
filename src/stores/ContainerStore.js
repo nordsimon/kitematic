@@ -9,6 +9,7 @@ class ContainerStore {
     this.bindActions(containerServerActions);
     this.containers = {};
 
+    window.c = this
     // Pending container to create
     this.pending = null;
   }
